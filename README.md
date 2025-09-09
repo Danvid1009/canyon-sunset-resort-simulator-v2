@@ -2,9 +2,9 @@
 
 A dynamic pricing simulation platform for wedding venue booking strategies.
 
-##Youtube Demo
+## Youtube Demo
 
-[Watch on YouTube](https://www.youtube.com/watch?v=c-gghzNtCb0&ab_channel=DanielDavid)
+[Watch a Demo on YouTube HERE](https://www.youtube.com/watch?v=c-gghzNtCb0&ab_channel=DanielDavid)
 
 ## Project Structure
 
