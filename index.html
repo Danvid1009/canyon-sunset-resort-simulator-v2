@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canyon Sunset Resort Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <h1>🏔️ Canyon Sunset Resort</h1>
+                        <p>Dynamic Pricing Simulator</p>
+                    </div>
+                    <div class="header-info">
+                        <span class="version">v2.0 - Interactive Teaching Tool</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Progress Steps -->
+        <nav class="progress-nav">
+            <div class="container">
+                <div class="progress-steps">
+                    <div class="step active" data-step="teaching">
+                        <div class="step-icon">🎮</div>
+                        <span>Teaching Simulator</span>
+                    </div>
+                    <div class="step" data-step="strategy">
+                        <div class="step-icon">📋</div>
+                        <span>Upload Strategy</span>
+                    </div>
+                    <div class="step" data-step="simulate">
+                        <div class="step-icon">⚡</div>
+                        <span>Simulate</span>
+                    </div>
+                    <div class="step" data-step="results">
+                        <div class="step-icon">📊</div>
+                        <span>Results</span>
+                    </div>
+                    <div class="step" data-step="submit">
+                        <div class="step-icon">📤</div>
+                        <span>Submit</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <div class="content-grid">
+                    <!-- Left Column - Main Panel -->
+                    <div class="main-panel">
+                        <!-- Teaching Simulator Step -->
+                        <div class="step-content active" id="teaching-step">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>🎓 Interactive Teaching Simulator</h2>
+                                    <p>Experience dynamic pricing decisions in real-time. Choose prices for each selling opportunity and see how your decisions affect revenue.</p>
+                                </div>
+                                
+                                <!-- Pricing Controls -->
+                                <div class="teaching-controls">
+                                    <div class="control-section">
+                                        <h3>Choose Your Price:</h3>
+                                        <div class="price-buttons">
+                                            <button class="btn-price btn-price-low" id="price-low" disabled>
+                                                <span class="price-label">LOW</span>
+                                                <span class="price-value">$30,000</span>
+                                                <span class="price-prob">90% sale chance</span>
+                                            </button>
+                                            <button class="btn-price btn-price-med" id="price-med" disabled>
+                                                <span class="price-label">MED</span>
+                                                <span class="price-value">$40,000</span>
+                                                <span class="price-prob">80% sale chance</span>
+                                            </button>
+                                            <button class="btn-price btn-price-high" id="price-high" disabled>
+                                                <span class="price-label">HIGH</span>
+                                                <span class="price-value">$50,000</span>
+                                                <span class="price-prob">40% sale chance</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Simulation Status -->
+                                    <div class="status-section">
+                                        <div class="status-grid">
+                                            <div class="status-item">
+                                                <span class="status-label">Selling Opportunity</span>
+                                                <span class="status-value" id="status-opportunity">0 / 15</span>
+                                            </div>
+                                            <div class="status-item">
+                                                <span class="status-label">Inventory Remaining</span>
+                                                <span class="status-value" id="status-inventory">7</span>
+                                            </div>
+                                            <div class="status-item">
+                                                <span class="status-label">Revenue Collected</span>
+                                                <span class="status-value" id="status-revenue">$0</span>
+                                            </div>
+                                        </div>
+                                        <div class="outcome-message" id="outcome-message"></div>
+                                    </div>
+
+                                    <!-- Trial Controls -->
+                                    <div class="trial-section">
+                                        <div class="trial-info">
+                                            <span id="trial-counter">Trial 1 / 3</span>
+                                            <span id="avg-revenue">Average Revenue: $0</span>
+                                        </div>
+                                        <div class="trial-buttons">
+                                            <button class="btn btn-primary" id="start-trial">Start Trial</button>
+                                            <button class="btn btn-secondary" id="reset-trials">Reset All Trials</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Charts Section -->
+                                <div class="charts-section">
+                                    <div class="chart-container">
+                                        <h4>Inventory Over Time</h4>
+                                        <canvas id="inventory-chart"></canvas>
+                                    </div>
+                                    <div class="chart-container">
+                                        <h4>Price History</h4>
+                                        <canvas id="price-history-chart"></canvas>
+                                    </div>
+                                    <div class="chart-container">
+                                        <h4>Sales Outcomes</h4>
+                                        <canvas id="sales-outcomes-chart"></canvas>
+                                    </div>
+                                </div>
+
+                                <div class="teaching-actions">
+                                    <button class="btn btn-primary" id="proceed-to-strategy">Continue to Strategy Upload →</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Strategy Upload Step -->
+                        <div class="step-content" id="strategy-step">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>📋 Design Your Strategy</h2>
+                                    <p>Create or upload a pricing strategy matrix (7 inventory levels × 15 selling opportunities)</p>
+                                </div>
+                                
+                                <!-- CSV Upload Section -->
+                                <div class="upload-section">
+                                    <h3>Upload CSV Strategy</h3>
+                                    <p class="upload-description">Upload a CSV file to populate the grid editor below, or design manually</p>
+                                    <div class="upload-area-inline" id="upload-area">
+                                        <div class="upload-icon-small">📄</div>
+                                        <span>Drop CSV file here or click to browse</span>
+                                        <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+                                    </div>
+                                </div>
+
+                                <!-- Grid Editor Section -->
+                                <div class="grid-editor-section">
+                                    <h3>Grid Editor</h3>
+                                    <p class="grid-description">Click cells to cycle through pricing levels: LOW → MED → HIGH</p>
+                                    <div class="playground-container">
+                                        <div class="grid-with-axes">
+                                            <div class="y-axis-label">
+                                                <span>← Inventory (I)</span>
+                                                <div class="axis-values">
+                                                    <span>7</span>
+                                                    <span>6</span>
+                                                    <span>5</span>
+                                                    <span>4</span>
+                                                    <span>3</span>
+                                                    <span>2</span>
+                                                    <span>1</span>
+                                                </div>
+                                            </div>
+                                            <div class="grid-and-x-axis">
+                                                <div class="playground-grid" id="playground-grid">
+                                                    <!-- Grid will be generated by JavaScript -->
+                                                </div>
+                                                <div class="x-axis-label">
+                                                    <span>↓ Selling Opportunities (T)</span>
+                                                    <div class="axis-values-x">
+                                                        <span>1</span>
+                                                        <span>2</span>
+                                                        <span>3</span>
+                                                        <span>4</span>
+                                                        <span>5</span>
+                                                        <span>6</span>
+                                                        <span>7</span>
+                                                        <span>8</span>
+                                                        <span>9</span>
+                                                        <span>10</span>
+                                                        <span>11</span>
+                                                        <span>12</span>
+                                                        <span>13</span>
+                                                        <span>14</span>
+                                                        <span>15</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="playground-actions">
+                                            <button class="btn btn-secondary" id="clear-grid">Clear All</button>
+                                            <button class="btn btn-secondary" id="randomize-grid">Randomize</button>
+                                            <button class="btn btn-primary" id="export-csv">Export to CSV</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="strategy-actions">
+                                    <button class="btn btn-secondary" id="back-to-teaching">← Back to Teaching</button>
+                                    <button class="btn btn-primary" id="proceed-to-simulate">Proceed to Simulation →</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Simulate Step -->
+                        <div class="step-content" id="simulate-step">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>⚡ Monte Carlo Simulation</h2>
+                                    <p>Test your strategy with 100 simulation trials to evaluate expected performance</p>
+                                </div>
+                                <div class="simulation-container">
+                                    <div class="simulation-info">
+                                        <div class="info-box">
+                                            <h4>Simulation Configuration</h4>
+                                            <p>• Number of Trials: <strong>100</strong></p>
+                                            <p>• Simulation Type: <strong>Monte Carlo</strong></p>
+                                            <p>• Deterministic Seed: <strong>Enabled</strong></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Strategy Preview -->
+                                    <div class="strategy-preview-section">
+                                        <h4>Your Strategy Matrix</h4>
+                                        <div class="strategy-preview-grid" id="strategy-preview-grid">
+                                            <!-- Will be populated by JavaScript -->
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="philosophy-section">
+                                        <label for="philosophy">Strategy Philosophy:</label>
+                                        <textarea id="philosophy" placeholder="Explain your pricing strategy and reasoning..."></textarea>
+                                    </div>
+                                    <div class="simulation-actions">
+                                        <button class="btn btn-secondary" id="back-to-strategy">← Back to Strategy</button>
+                                        <button class="btn btn-primary" id="run-simulation">
+                                            <span class="btn-text">Run Monte Carlo Simulation</span>
+                                            <span class="btn-loading" style="display: none;">Running...</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Results Step -->
+                        <div class="step-content" id="results-step">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>📊 Simulation Results</h2>
+                                    <p>Your strategy performance across 100 Monte Carlo trials</p>
+                                </div>
+                                <div class="results-container" id="results-container">
+                                    <!-- Results will be populated by JavaScript -->
+                                </div>
+                                
+                                <!-- Monte Carlo Visualization -->
+                                <div class="monte-carlo-viz">
+                                    <h3>Monte Carlo Distribution</h3>
+                                    <div class="chart-container">
+                                        <canvas id="monte-carlo-chart"></canvas>
+                                    </div>
+                                </div>
+
+                                <div class="results-actions">
+                                    <button class="btn btn-secondary" id="back-to-simulate">← Back to Simulation</button>
+                                    <button class="btn btn-primary" id="proceed-to-submit">Proceed to Submit</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Step -->
+                        <div class="step-content" id="submit-step">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>📤 Submit Strategy</h2>
+                                    <p>Submit your strategy for evaluation</p>
+                                </div>
+                                <div class="submit-container">
+                                    <div class="submit-form">
+                                        <div class="form-group">
+                                            <label for="student-name">Student Name:</label>
+                                            <input type="text" id="student-name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="student-email">Student Email:</label>
+                                            <input type="email" id="student-email" required>
+                                        </div>
+                                        <div class="submit-info">
+                                            <p><strong>Strategy Summary:</strong></p>
+                                            <div id="strategy-summary"></div>
+                                        </div>
+                                    </div>
+                                    <div class="submit-actions">
+                                        <button class="btn btn-secondary" id="back-to-results">← Back to Results</button>
+                                        <button class="btn btn-primary" id="submit-strategy">
+                                            <span class="btn-text">Submit Strategy</span>
+                                            <span class="btn-loading" style="display: none;">Submitting...</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Config Panel -->
+                    <div class="config-panel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>⚙️ Configuration</h3>
+                            </div>
+                            <div class="config-content">
+                                <div class="config-section">
+                                    <h4>📏 Dimensions</h4>
+                                    <div class="config-item">
+                                        <span>Inventory Levels (I)</span>
+                                        <span class="config-value">7</span>
+                                    </div>
+                                    <div class="config-item">
+                                        <span>Selling Opportunities (T)</span>
+                                        <span class="config-value">15</span>
+                                    </div>
+                                </div>
+
+                                <div class="config-section">
+                                    <h4>💰 Price Levels</h4>
+                                    <div class="config-item">
+                                        <span>LOW Price</span>
+                                        <span class="config-value">$30,000</span>
+                                    </div>
+                                    <div class="config-item">
+                                        <span>MED Price</span>
+                                        <span class="config-value">$40,000</span>
+                                    </div>
+                                    <div class="config-item">
+                                        <span>HIGH Price</span>
+                                        <span class="config-value">$50,000</span>
+                                    </div>
+                                </div>
+
+                                <div class="config-section">
+                                    <h4>🎯 Sale Probabilities</h4>
+                                    <div class="config-item">
+                                        <span>LOW Sale Rate</span>
+                                        <span class="config-value">90%</span>
+                                    </div>
+                                    <div class="config-item">
+                                        <span>MED Sale Rate</span>
+                                        <span class="config-value">80%</span>
+                                    </div>
+                                    <div class="config-item">
+                                        <span>HIGH Sale Rate</span>
+                                        <span class="config-value">40%</span>
+                                    </div>
+                                </div>
+
+                                <div class="config-section">
+                                    <h4>📋 Instructions</h4>
+                                    <div class="instructions">
+                                        <p>• Experience manual pricing decisions</p>
+                                        <p>• Design complete strategy matrix</p>
+                                        <p>• Test with Monte Carlo simulation</p>
+                                        <p>• Submit for evaluation</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Error Display -->
+        <div class="error-toast" id="error-toast" style="display: none;">
+            <div class="error-content">
+                <span class="error-icon">⚠️</span>
+                <span class="error-message"></span>
+                <button class="error-close" id="error-close">×</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="simulation.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
