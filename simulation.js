@@ -12,14 +12,34 @@ const CONFIG = {
     'MED': 40000,
     'HIGH': 50000
   },
-  SALE_PROBABILITIES: {
-    30000: 0.90,  // LOW price
-    40000: 0.80,  // MED price  
-    50000: 0.40   // HIGH price
-  },
   DEFAULT_TRIALS: 10000,
   DEFAULT_SEED: 42
 };
+
+/**
+ * Logistic Regression Model for Sale Probabilities
+ */
+class ProbabilityModel {
+  calculateSaleProbability(t, inventory, priceLevel, isLateSeason) {
+    // t: week number (1-15)
+    // inventory: remaining inventory (1-7)--not used in this model
+    // priceLevel: 'LOW', 'MED', 'HIGH'
+    // isLateSeason: boolean (t >= 12)
+    
+    // Model coefficients
+    const W = 6.07 
+      - 0.43 * t                    // week_number
+      - 1.96 * (priceLevel === 'MED' ? 1 : 0)  // is_medium_price
+      - 3.75 * (priceLevel === 'HIGH' ? 1 : 0) // is_high_price
+      + 2.50 * (isLateSeason ? 1 : 0);         // is_late_season
+    
+    // Logistic function: 1 / (1 + e^(-W))
+    const probability = 1 / (1 + Math.exp(-W));
+    
+    // Ensure probability is between 0 and 1
+    return Math.max(0, Math.min(1, probability));
+  }
+}
 
 /**
  * Simple Linear Congruential Generator for deterministic random numbers
@@ -103,6 +123,7 @@ class SimulationEngine {
     };
     
     this.rng = new RNG(this.config.seed);
+    this.probabilityModel = new ProbabilityModel();
     this._validateConfig();
   }
 
@@ -181,10 +202,21 @@ class SimulationEngine {
       const capacityIndex = state.capacity - 1; // 0-indexed
       const price = policy.getPrice(capacityIndex, t);
       
-      // Attempt sale with probability based on price
-      const saleProbability = CONFIG.SALE_PROBABILITIES[price] || 0;
-      const randomValue = this.rng.next();
+      // Convert price to price level
+      let priceLevel = 'LOW';
+      if (price === 40000) priceLevel = 'MED';
+      else if (price === 50000) priceLevel = 'HIGH';
       
+      // Calculate dynamic sale probability using logistic regression
+      const isLateSeason = (t + 1) >= 12; // t is 0-indexed, so t+1 is week number
+      const saleProbability = this.probabilityModel.calculateSaleProbability(
+        t + 1, // week number (1-15)
+        state.capacity, // remaining inventory
+        priceLevel, // 'LOW', 'MED', 'HIGH'
+        isLateSeason // boolean for late season
+      );
+      
+      const randomValue = this.rng.next();
       const sold = randomValue < saleProbability;
       
       // Update state

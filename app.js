@@ -12,15 +12,12 @@ class CanyonSunsetApp {
     
     // Teaching simulator state
     this.teachingState = {
-      currentTrial: 1,
-      maxTrials: 3,
       opportunity: 0,
       inventory: 7,
       revenue: 0,
       priceHistory: [],
       salesHistory: [],
       inventoryHistory: [7],
-      trialResults: [],
       isTrialActive: false
     };
     
@@ -28,7 +25,6 @@ class CanyonSunsetApp {
     this.charts = {
       inventory: null,
       priceHistory: null,
-      salesOutcomes: null,
       monteCarlo: null
     };
     
@@ -54,7 +50,6 @@ class CanyonSunsetApp {
 
     // Teaching simulator
     document.getElementById('start-trial').addEventListener('click', () => this.startTrial());
-    document.getElementById('reset-trials').addEventListener('click', () => this.resetTrials());
     document.getElementById('price-low').addEventListener('click', () => this.choosePrice('LOW'));
     document.getElementById('price-med').addEventListener('click', () => this.choosePrice('MED'));
     document.getElementById('price-high').addEventListener('click', () => this.choosePrice('HIGH'));
@@ -113,9 +108,37 @@ class CanyonSunsetApp {
     document.getElementById('start-trial').disabled = true;
 
     this.updateTeachingDisplay();
+    this.updateWeekSlider();
+    this.updateDynamicProbabilities();
     this.updateTeachingCharts();
     document.getElementById('outcome-message').textContent = 'Choose your first price...';
     document.getElementById('outcome-message').className = 'outcome-message';
+  }
+
+  updateWeekSlider() {
+    const currentWeek = this.teachingState.opportunity;
+    const progressPercentage = (currentWeek / 15) * 100;
+    
+    document.getElementById('week-progress').style.width = `${progressPercentage}%`;
+    document.getElementById('week-current').textContent = currentWeek;
+  }
+
+  updateDynamicProbabilities() {
+    if (!this.teachingState.isTrialActive) return;
+    
+    const weekNumber = this.teachingState.opportunity + 1;
+    const isLateSeason = weekNumber >= 12;
+    const probabilityModel = new ProbabilityModel();
+    
+    // Calculate probabilities for each price level
+    const lowProb = probabilityModel.calculateSaleProbability(weekNumber, this.teachingState.inventory, 'LOW', isLateSeason);
+    const medProb = probabilityModel.calculateSaleProbability(weekNumber, this.teachingState.inventory, 'MED', isLateSeason);
+    const highProb = probabilityModel.calculateSaleProbability(weekNumber, this.teachingState.inventory, 'HIGH', isLateSeason);
+    
+    // Update button labels
+    document.getElementById('low-prob').textContent = `${Math.round(lowProb * 100)}% sale chance`;
+    document.getElementById('med-prob').textContent = `${Math.round(medProb * 100)}% sale chance`;
+    document.getElementById('high-prob').textContent = `${Math.round(highProb * 100)}% sale chance`;
   }
 
   choosePrice(priceLevel) {
@@ -129,12 +152,20 @@ class CanyonSunsetApp {
       return;
     }
 
-    // Get price and probability
+    // Get price
     const prices = { 'LOW': 30000, 'MED': 40000, 'HIGH': 50000 };
-    const probabilities = { 'LOW': 0.90, 'MED': 0.80, 'HIGH': 0.40 };
-    
     const price = prices[priceLevel];
-    const saleProb = probabilities[priceLevel];
+    
+    // Calculate dynamic sale probability using logistic regression
+    const weekNumber = this.teachingState.opportunity + 1;
+    const isLateSeason = weekNumber >= 12;
+    const probabilityModel = new ProbabilityModel();
+    const saleProb = probabilityModel.calculateSaleProbability(
+      weekNumber,
+      this.teachingState.inventory,
+      priceLevel,
+      isLateSeason
+    );
     
     // Simulate sale
     const randomValue = Math.random();
@@ -155,6 +186,8 @@ class CanyonSunsetApp {
     
     this.teachingState.inventoryHistory.push(this.teachingState.inventory);
     this.updateTeachingDisplay();
+    this.updateWeekSlider();
+    this.updateDynamicProbabilities();
     this.updateTeachingCharts();
     
     // Check if trial should end
@@ -177,50 +210,14 @@ class CanyonSunsetApp {
     document.getElementById('price-med').disabled = true;
     document.getElementById('price-high').disabled = true;
     
-    // Record trial result
-    this.teachingState.trialResults.push({
-      revenue: this.teachingState.revenue,
-      salesCount: this.teachingState.salesHistory.filter(s => s).length
-    });
+    // Show final results
+    const salesCount = this.teachingState.salesHistory.filter(s => s).length;
+    this.showOutcome(`Trial complete! Revenue: $${Math.round(this.teachingState.revenue/1000)}K, Sales: ${salesCount}/7`, 'sale');
     
-    // Update average revenue
-    const avgRevenue = this.teachingState.trialResults.reduce((sum, t) => sum + t.revenue, 0) / this.teachingState.trialResults.length;
-    document.getElementById('avg-revenue').textContent = `Average Revenue: $${Math.round(avgRevenue/1000)}K`;
-    
-    // Check if more trials
-    if (this.teachingState.currentTrial < this.teachingState.maxTrials) {
-      this.teachingState.currentTrial++;
-      document.getElementById('trial-counter').textContent = `Trial ${this.teachingState.currentTrial} / ${this.teachingState.maxTrials}`;
-      document.getElementById('start-trial').disabled = false;
-      this.showOutcome(`Trial complete! Revenue: $${Math.round(this.teachingState.revenue/1000)}K`, 'sale');
-    } else {
-      this.showOutcome(`All trials complete! Final avg: $${Math.round(avgRevenue/1000)}K`, 'sale');
-    }
-  }
-
-  resetTrials() {
-    this.teachingState.currentTrial = 1;
-    this.teachingState.opportunity = 0;
-    this.teachingState.inventory = 7;
-    this.teachingState.revenue = 0;
-    this.teachingState.priceHistory = [];
-    this.teachingState.salesHistory = [];
-    this.teachingState.inventoryHistory = [7];
-    this.teachingState.trialResults = [];
-    this.teachingState.isTrialActive = false;
-
-    document.getElementById('trial-counter').textContent = `Trial 1 / 3`;
-    document.getElementById('avg-revenue').textContent = `Average Revenue: $0`;
+    // Re-enable start trial button
     document.getElementById('start-trial').disabled = false;
-    document.getElementById('price-low').disabled = true;
-    document.getElementById('price-med').disabled = true;
-    document.getElementById('price-high').disabled = true;
-    document.getElementById('outcome-message').textContent = '';
-    document.getElementById('outcome-message').className = 'outcome-message';
-
-    this.updateTeachingDisplay();
-    this.updateTeachingCharts();
   }
+
 
   updateTeachingDisplay() {
     document.getElementById('status-opportunity').textContent = `${this.teachingState.opportunity} / 15`;
@@ -293,37 +290,6 @@ class CanyonSunsetApp {
       }
     });
 
-    // Sales outcomes chart
-    const salesCtx = document.getElementById('sales-outcomes-chart').getContext('2d');
-    this.charts.salesOutcomes = new Chart(salesCtx, {
-      type: 'bar',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Sale Occurred',
-          data: [],
-          backgroundColor: function(context) {
-            return context.parsed.y === 1 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)';
-          }
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 1,
-            ticks: {
-              stepSize: 1,
-              callback: function(value) {
-                return value === 1 ? 'Sold' : 'Not Sold';
-              }
-            }
-          }
-        }
-      }
-    });
   }
 
   updateTeachingCharts() {
@@ -339,10 +305,6 @@ class CanyonSunsetApp {
     this.charts.priceHistory.data.datasets[0].data = this.teachingState.priceHistory;
     this.charts.priceHistory.update();
 
-    // Update sales outcomes chart
-    this.charts.salesOutcomes.data.labels = priceLabels;
-    this.charts.salesOutcomes.data.datasets[0].data = this.teachingState.salesHistory.map(s => s ? 1 : 0);
-    this.charts.salesOutcomes.update();
   }
 
   // ============================================
@@ -361,10 +323,11 @@ class CanyonSunsetApp {
     for (let i = 0; i < CONFIG.I; i++) {
       for (let t = 0; t < CONFIG.T; t++) {
         const cell = document.createElement('div');
-        cell.className = 'grid-cell empty';
+        cell.className = 'grid-cell low';
         cell.dataset.capacity = i;
         cell.dataset.period = t;
-        cell.textContent = 'Click';
+        cell.dataset.price = 'LOW';
+        cell.textContent = 'LOW';
         
         cell.addEventListener('click', () => this.cycleCellPrice(cell));
         
@@ -375,41 +338,45 @@ class CanyonSunsetApp {
 
   cycleCellPrice(cell) {
     const currentClass = cell.className;
-    let newClass, newText;
+    let newClass, newText, newPrice;
     
-    if (currentClass.includes('empty')) {
-      newClass = 'grid-cell low';
-      newText = 'LOW';
-    } else if (currentClass.includes('low')) {
+    if (currentClass.includes('low')) {
       newClass = 'grid-cell med';
       newText = 'MED';
+      newPrice = 'MED';
     } else if (currentClass.includes('med')) {
       newClass = 'grid-cell high';
       newText = 'HIGH';
+      newPrice = 'HIGH';
     } else if (currentClass.includes('high')) {
-      newClass = 'grid-cell empty';
-      newText = 'Click';
+      newClass = 'grid-cell low';
+      newText = 'LOW';
+      newPrice = 'LOW';
     }
     
     cell.className = newClass;
     cell.textContent = newText;
+    cell.dataset.price = newPrice;
   }
 
   clearGrid() {
     document.querySelectorAll('.grid-cell').forEach(cell => {
-      cell.className = 'grid-cell empty';
-      cell.textContent = 'Click';
+      cell.className = 'grid-cell low';
+      cell.textContent = 'LOW';
+      cell.dataset.price = 'LOW';
     });
   }
 
   randomizeGrid() {
-    const priceLevels = ['empty', 'low', 'med', 'high'];
-    const priceTexts = ['Click', 'LOW', 'MED', 'HIGH'];
+    const priceLevels = ['low', 'med', 'high'];
+    const priceTexts = ['LOW', 'MED', 'HIGH'];
+    const priceValues = ['LOW', 'MED', 'HIGH'];
     
     document.querySelectorAll('.grid-cell').forEach(cell => {
       const randomIndex = Math.floor(Math.random() * priceLevels.length);
       cell.className = `grid-cell ${priceLevels[randomIndex]}`;
       cell.textContent = priceTexts[randomIndex];
+      cell.dataset.price = priceValues[randomIndex];
     });
   }
 
@@ -545,12 +512,13 @@ class CanyonSunsetApp {
             cellClass = 'grid-cell high';
             cellText = 'HIGH';
           } else {
-            cellClass = 'grid-cell empty';
-            cellText = 'Click';
+            cellClass = 'grid-cell low';
+            cellText = 'LOW';
           }
           
           cell.className = cellClass;
           cell.textContent = cellText;
+          cell.dataset.price = cellText;
         }
       }
     }
@@ -754,6 +722,8 @@ class CanyonSunsetApp {
       const revenues = [];
       
       // Re-run to get individual trial revenues
+      const probabilityModel = new ProbabilityModel();
+      
       for (let i = 0; i < 100; i++) {
         const rng = new RNG(42 + i);
         let revenue = 0;
@@ -762,7 +732,22 @@ class CanyonSunsetApp {
         for (let t = 0; t < 15 && inventory > 0; t++) {
           const capacityIdx = inventory - 1;
           const price = this.policyMatrix.getPrice(capacityIdx, t);
-          const saleProb = CONFIG.SALE_PROBABILITIES[price] || 0;
+          
+          // Convert price to price level
+          let priceLevel = 'LOW';
+          if (price === 40000) priceLevel = 'MED';
+          else if (price === 50000) priceLevel = 'HIGH';
+          
+          // Calculate dynamic sale probability
+          const weekNumber = t + 1;
+          const isLateSeason = weekNumber >= 12;
+          const saleProb = probabilityModel.calculateSaleProbability(
+            weekNumber,
+            inventory,
+            priceLevel,
+            isLateSeason
+          );
+          
           const sold = rng.next() < saleProb;
           
           if (sold) {
