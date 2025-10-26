@@ -21,6 +21,12 @@ class CanyonSunsetApp {
       isTrialActive: false
     };
     
+    // Grid drag state
+    this.gridDragState = {
+      isDragging: false,
+      dragStartCell: null
+    };
+    
     // Chart instances
     this.charts = {
       inventory: null,
@@ -67,6 +73,9 @@ class CanyonSunsetApp {
     uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
     uploadArea.addEventListener('dragleave', (e) => this.handleDragLeave(e));
     uploadArea.addEventListener('drop', (e) => this.handleDrop(e));
+
+    // Global mouseup listener for grid dragging
+    document.addEventListener('mouseup', () => this.handleCellMouseUp());
 
     // Strategy navigation
     document.getElementById('back-to-teaching').addEventListener('click', () => this.goToStep('teaching'));
@@ -329,11 +338,31 @@ class CanyonSunsetApp {
         cell.dataset.price = 'LOW';
         cell.textContent = 'LOW';
         
-        cell.addEventListener('click', () => this.cycleCellPrice(cell));
+        cell.addEventListener('mousedown', (e) => this.handleCellMouseDown(e));
+        cell.addEventListener('mouseenter', (e) => this.handleCellMouseEnter(e));
+        cell.addEventListener('mouseup', () => this.handleCellMouseUp());
         
         grid.appendChild(cell);
       }
     }
+  }
+
+  handleCellMouseDown(e) {
+    e.preventDefault();
+    this.gridDragState.isDragging = true;
+    this.gridDragState.dragStartCell = e.target;
+    this.cycleCellPrice(e.target);
+  }
+
+  handleCellMouseEnter(e) {
+    if (this.gridDragState.isDragging && e.target.classList.contains('grid-cell')) {
+      this.cycleCellPrice(e.target);
+    }
+  }
+
+  handleCellMouseUp() {
+    this.gridDragState.isDragging = false;
+    this.gridDragState.dragStartCell = null;
   }
 
   cycleCellPrice(cell) {
