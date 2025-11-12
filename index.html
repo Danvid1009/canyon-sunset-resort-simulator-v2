@@ -4,10 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canyon Sunset Resort Simulator</title>
+    
+    <!--
+        STYLESHEET: Contains all application styling
+        - Canyon/sunset theme colors
+        - Responsive layouts and grid formatting
+        - Button, card, and form components
+    -->
     <link rel="stylesheet" href="styles.css">
+
+    <!-- External Font: Google Inter family for consistent typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!--
+        External Library: Chart.js via CDN
+        - Used on Teaching Simulator (inventory + price charts)
+        - Used on Results tab for Monte Carlo histogram
+        - Must load before app.js initializes charts
+    -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -27,7 +43,11 @@
             </div>
         </header>
 
-        <!-- Progress Steps -->
+        <!--
+            PROGRESS STEPS NAVIGATION
+            - Each step has a data-step attribute that app.js uses for tab routing
+            - app.js toggles the active/completed classes as the user progresses
+        -->
         <nav class="progress-nav">
             <div class="container">
                 <div class="progress-steps">
@@ -153,7 +173,12 @@
                                     <button class="btn btn-primary btn-large" id="start-trial">Start Trial</button>
                                 </div>
 
-                                <!-- Pricing Controls -->
+                                <!--
+                                    PRICING CONTROLS
+                                    - Buttons stay disabled until Start Trial is pressed (handled in app.js)
+                                    - choosePrice() cycles LOW/MED/HIGH and logs outcomes
+                                    - updateDynamicProbabilities() updates the probability labels via ProbabilityModel in simulation.js
+                                -->
                                 <div class="teaching-controls">
                                     <div class="control-section">
                                         <h3>Choose Your Price:</h3>
@@ -161,22 +186,29 @@
                                             <button class="btn-price btn-price-low" id="price-low" disabled>
                                                 <span class="price-label">LOW</span>
                                                 <span class="price-value">$30,000</span>
+                                                <!-- Populated by updateDynamicProbabilities() -->
                                                 <span class="price-prob" id="low-prob">Dynamic</span>
                                             </button>
                                             <button class="btn-price btn-price-med" id="price-med" disabled>
                                                 <span class="price-label">MED</span>
                                                 <span class="price-value">$40,000</span>
+                                                <!-- Populated by updateDynamicProbabilities() -->
                                                 <span class="price-prob" id="med-prob">Dynamic</span>
                                             </button>
                                             <button class="btn-price btn-price-high" id="price-high" disabled>
                                                 <span class="price-label">HIGH</span>
                                                 <span class="price-value">$50,000</span>
+                                                <!-- Populated by updateDynamicProbabilities() -->
                                                 <span class="price-prob" id="high-prob">Dynamic</span>
                                             </button>
                                         </div>
                                     </div>
 
-                                    <!-- Simulation Status -->
+                                    <!--
+                                        SIMULATION STATUS DISPLAY
+                                        - updateTeachingDisplay() updates opportunity/inventory/revenue each step
+                                        - showOutcome() writes sale/no-sale feedback into outcome-message
+                                    -->
                                     <div class="status-section">
                                         <div class="status-grid">
                                             <div class="status-item">
@@ -195,7 +227,11 @@
                                         <div class="outcome-message" id="outcome-message"></div>
                                     </div>
 
-                                    <!-- Week Progress Slider -->
+                                    <!--
+                                        WEEK PROGRESS SLIDER
+                                        - updateWeekSlider() drives the bar width and week-current value
+                                        - Visual indicator of how far through the 15 periods the user is
+                                    -->
                                     <div class="week-progress-section">
                                         <h4>Week Progress</h4>
                                         <div class="week-slider-container">
@@ -216,14 +252,20 @@
                                     </div>
                                 </div>
 
-                                <!-- Charts Section -->
+                                <!--
+                                    CHART VISUALIZATIONS
+                                    - initializeCharts() in app.js creates the Chart.js instances
+                                    - updateTeachingCharts() redraws them after each price selection
+                                -->
                                 <div class="charts-section">
                                     <div class="chart-container">
                                         <h4>Inventory Over Time</h4>
+                                        <!-- Chart.js renders on this canvas -->
                                         <canvas id="inventory-chart"></canvas>
                                     </div>
                                     <div class="chart-container">
                                         <h4>Price History</h4>
+                                        <!-- Chart.js renders on this canvas -->
                                         <canvas id="price-history-chart"></canvas>
                                     </div>
                                 </div>
@@ -243,20 +285,34 @@
                                 </div>
                                 
                                 <!-- CSV Upload Section -->
+                                <!--
+                                    CSV UPLOAD SECTION
+                                    - handleFileUpload/processCSVFile in app.js parse files using CSVProcessor (simulation.js)
+                                    - Validates dimensions (7×15) and price levels (LOW/MED/HIGH)
+                                    - After validation populates the grid editor via populateGridFromMatrix()
+                                    - Supports drag-and-drop and click-to-browse interactions
+                                -->
                                 <div class="upload-section">
                                     <h3>Upload CSV Strategy</h3>
                                     <p class="upload-description">Upload a CSV file to populate the grid editor below, or design manually</p>
                                     <div class="upload-area-inline" id="upload-area">
                                         <div class="upload-icon-small">📄</div>
                                         <span>Drop CSV file here or click to browse</span>
+                                        <!-- Hidden file input triggered when the upload area is clicked -->
                                         <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
                                     </div>
                                 </div>
 
-                    <!-- Grid Editor Section -->
-                    <div class="grid-editor-section">
-                        <h3>Grid Editor</h3>
-                        <p class="grid-description">Click cells to cycle through pricing levels: LOW → MED → HIGH → LOW</p>
+                                <!--
+                                    GRID EDITOR
+                                    - generatePlaygroundGrid() (app.js) creates the interactive 7×15 matrix
+                                    - cycleCellPrice() cycles LOW → MED → HIGH → LOW on click/drag
+                                    - drag handlers allow painting multiple cells
+                                    - Values feed directly into SimulationEngine via PolicyMatrix
+                                -->
+                                <div class="grid-editor-section">
+                                    <h3>Grid Editor</h3>
+                                    <p class="grid-description">Click cells to cycle through pricing levels: LOW → MED → HIGH → LOW</p>
                                     <div class="playground-container">
                                         <div class="grid-with-axes">
                                             <div class="y-axis-label">
@@ -272,8 +328,9 @@
                                                 </div>
                                             </div>
                                             <div class="grid-and-x-axis">
+                                                <!-- DOM node where app.js injects the interactive grid -->
                                                 <div class="playground-grid" id="playground-grid">
-                                                    <!-- Grid will be generated by JavaScript -->
+                                                    <!-- Cells inserted dynamically on load -->
                                                 </div>
                                                 <div class="x-axis-label">
                                                     <div class="axis-label-text">Selling Opportunities (T) →</div>
@@ -333,7 +390,7 @@
                                     <div class="strategy-preview-section">
                                         <h4>Your Strategy Matrix</h4>
                                         <div class="strategy-preview-grid" id="strategy-preview-grid">
-                                            <!-- Will be populated by JavaScript -->
+                                            <!-- Preview grid populated by JavaScript when entering the simulate step -->
                                         </div>
                                     </div>
                                     
@@ -359,14 +416,24 @@
                                     <h2>📊 Simulation Results</h2>
                                     <p>Your strategy performance across 100 Monte Carlo trials</p>
                                 </div>
+                                <!--
+                                    RESULTS CONTAINER
+                                    - displayResults() in app.js fills this section after SimulationEngine completes
+                                    - Uses SimulationResults aggregates (avg revenue, fill rate, etc.)
+                                -->
                                 <div class="results-container" id="results-container">
-                                    <!-- Results will be populated by JavaScript -->
+                                    <!-- Metrics injected dynamically once simulation finishes -->
                                 </div>
                                 
-                                <!-- Monte Carlo Visualization -->
+                                <!--
+                                    MONTE CARLO DISTRIBUTION
+                                    - createMonteCarloChart() builds a Chart.js histogram of trial revenues
+                                    - Uses ProbabilityModel and RNG from simulation.js to replay 100 trials for visualization
+                                -->
                                 <div class="monte-carlo-viz">
                                     <h3>Monte Carlo Distribution</h3>
                                     <div class="chart-container">
+                                        <!-- Chart.js renders histogram in this canvas -->
                                         <canvas id="monte-carlo-chart"></canvas>
                                     </div>
                                 </div>
@@ -426,7 +493,31 @@
         </div>
     </div>
 
+    <!--
+        ============================================================================
+        JAVASCRIPT DEPENDENCIES (load order matters)
+        ============================================================================
+    -->
+    
+    <!--
+        simulation.js – Monte Carlo simulation engine
+        - ProbabilityModel: logistic regression defining sale probabilities
+        - SimulationEngine: runs batched trials and produces SimulationResults
+        - PolicyMatrix: wraps the grid strategy matrix
+        - CSVProcessor: parses/validates CSV content for the grid editor
+        - RNG: deterministic pseudo-random number generator for reproducible runs
+        NOTE: Pure business logic, no DOM manipulation
+    -->
     <script src="simulation.js"></script>
+    
+    <!--
+        app.js – Application controller / UI logic
+        - Attaches all event listeners defined in index.html
+        - Generates the strategy grid and handles drag-to-click behavior
+        - Coordinates with SimulationEngine to run Monte Carlo trials
+        - Updates the DOM and renders Chart.js visualizations
+        DEPENDENCIES: Requires simulation.js and Chart.js to be loaded first
+    -->
     <script src="app.js"></script>
 </body>
 </html>
